@@ -1,71 +1,7 @@
 import numpy as np
 import sys
 import os
-from tabulate import tabulate
-
-# KNOWLEDGE BASE 
-# Importing Sudoku rules from file 
-loc = os.path.realpath(
-    os.path.join(os.getcwd(), os.path.dirname(__file__)))
-filepath = '/test sudokus/sudoku-rules-4x4.txt'
-path = loc+filepath
-
-f = open(path, 'r')
-lines = f.readlines()
-in_data = []
-for line in lines:
-    in_data.append(line.strip().split('0')[0])
-f.close()
-
-# Insert all the clauses in the knowledge base
-KB = [[int(n) for n in line.split()] for line in in_data if line[0] not in ('c', 'p')]
-#print('Total number of clauses in KB:', len(KB))
-#print('first clause:', KB[0])
-
-
-# PREMISES 
-# Import Sudokus 
-filepath = '/test sudokus/4x4.txt'
-path = loc+filepath
-f = open(path, 'r')
-lines = f.readlines()
-sudoku4x4 = []
-for line in lines:
-  sudoku4x4.append(line.strip().split('n')[0])
-f.close()
-#print(sudoku4x4[:5])
-
-# Converting 1st puzzle to CNF
-
-col = 1
-row = 1
-premises = []
-for i in range(len(sudoku4x4[0])):
-  if col == 5: 
-    col = 1
-    row += 1  
-  result = ''
-  if sudoku4x4[0][i] != '.':
-    value = sudoku4x4[0][i]
-    result = result + str(row)+str(col)+str(value)
-    premises.append([int(result)])
-  col += 1
-
-sudoku = []
-for i in range(4):
-  for j in range(4):
-    sudoku.append('.')
-sudoku = np.array(sudoku).reshape(4,4)
-for i in range(len(premises)):
-  val = str(premises[i])
-  m = int(val[1]) -1
-  n = int(val[2]) -1
-  sudoku[m][n] = val[3]
-
-print(tabulate(sudoku))
-
-# Preparing Final CNF by combining KB and Premises 
-CNF = KB + premises
+import random
 
 def backtrack(clauses, literal):
     modified = []
@@ -150,24 +86,15 @@ def dpll(clauses, model):
 
 def main():
     cnf = [[-1, -3, -4], [2, 3, -4], [1, -2, 4], [1, 3, 4], [-1, 2, -3],[-5,2],[10]]
-    solution = dpll(CNF,[])
+    solution = dpll(cnf,[])
 
     if solution:
-      print('Satisfiable')
-      solution = np.array(solution)
-      final = solution[solution > 0]
-  
-      #print(len(final))
-      for i in range(len(final)):
-        val = str(final[i])
-        m = int(val[0]) -1
-        n = int(val[1]) -1
-        sudoku[m][n] = val[2]
-      print(tabulate(sudoku))
-
+        solution += [x for x in range(1, 5 + 1) if x not in solution and -x not in solution]
+        solution.sort(key=lambda x: abs(x))
+        print ('s SATISFIABLE')
+        print ('v ' + ' '.join([str(x) for x in solution]) + ' 0')
     else:
         print ('s UNSATISFIABLE')
 
 if __name__ == "__main__":
     main()
-
